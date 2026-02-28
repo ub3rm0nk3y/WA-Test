@@ -5,7 +5,7 @@ I rebuilt the aura into a clean, event-driven predictor specialized for Classic/
 ## Import string
 
 - File: `MASTERPIECE_THREAT_RESET_WEAKAURA.txt`
-- Type: WeakAuras 2 import string (`!WA:2!...`)
+- Type: WeakAuras 2 import string (legacy Deflate format (`!...`) for maximum Classic/TBC import compatibility)
 
 ## What was improved
 
@@ -29,3 +29,9 @@ I rebuilt the aura into a clean, event-driven predictor specialized for Classic/
 - Aura appears and starts ETA.
 - Any fresh hit exchange cancels prediction.
 - If no re-contact and leash is reached, timer converges and ends near reset moment.
+
+
+## Compatibility note
+
+- This string is now emitted in legacy Deflate format (prefix `!`) because some Classic/TBC WeakAuras builds fail to import certain `!WA:2!` exports with decompress errors.
+- The build script still validates both legacy format and `!WA:2!` format internally, then outputs legacy by default.

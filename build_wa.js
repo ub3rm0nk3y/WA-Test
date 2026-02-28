@@ -218,10 +218,17 @@ const aura = {
   },
 };
 
-const encoded = encodeSync(aura);
-const decoded = decodeSync(encoded);
-if (!decoded?.d?.id) {
-  throw new Error('Roundtrip validation failed');
+const encodedLegacy = encodeSync(aura, 1);
+const decodedLegacy = decodeSync(encodedLegacy);
+if (!decodedLegacy?.d?.id) {
+  throw new Error('Legacy roundtrip validation failed');
 }
 
-console.log(encoded);
+const encodedV2 = encodeSync(aura, 2);
+const decodedV2 = decodeSync(encodedV2);
+if (!decodedV2?.d?.id) {
+  throw new Error('V2 roundtrip validation failed');
+}
+
+// Print legacy format by default for maximum Classic/TBC compatibility.
+console.log(encodedLegacy);
