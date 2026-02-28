@@ -43,20 +43,33 @@ const triggerCode = String.raw`function(event, ...)
   local isElite = (cls == "elite" or cls == "rareelite")
   local isBoss = (cls == "worldboss")
 
-  local est = aura_env.baseReset or 8
-  if isElite then est = est + 3 end
-  if isBoss then est = est + 8 end
-
-  -- Distance buckets via interact distance checks (coarse but works in Classic/TBC)
-  if CheckInteractDistance(target, 3) then
-    est = est + 2
-  elseif CheckInteractDistance(target, 2) then
-    est = est + 1
-  else
-    est = est - 1
+  local function getLeashEstimateByLevel(level)
+    local tbl = aura_env.LEASH_TABLE or {
+      { max = 19,  t = 10 },
+      { max = 29,  t = 12 },
+      { max = 39,  t = 13 },
+      { max = 44,  t = 14 },
+      { max = 49,  t = 15 },
+      { max = 999, t = 16 },
+    }
+    for i = 1, #tbl do
+      if level <= tbl[i].max then
+        return tbl[i].t
+      end
+    end
+    return 16
   end
 
-  if est < 4 then est = 4 end
+  local mobLevel = UnitLevel(target)
+  if not mobLevel or mobLevel <= 0 then
+    mobLevel = 60
+  end
+
+  local est = getLeashEstimateByLevel(mobLevel)
+
+  -- Keep small classification adjustments, but preserve the table as the base model.
+  if isElite then est = est + 1 end
+  if isBoss then est = est + 2 end
 
   if event == "COMBAT_LOG_EVENT_UNFILTERED" then
     local _, subEvent, _, srcGUID, _, _, _, dstGUID = CombatLogGetCurrentEventInfo()
@@ -164,7 +177,7 @@ const aura = {
       finish: { do_sound: false, do_custom: false },
       init: {
         do_custom: true,
-        custom: "aura_env.baseReset = 8",
+        custom: "aura_env.LEASH_TABLE = {{ max = 19,  t = 10 }, { max = 29,  t = 12 }, { max = 39,  t = 13 }, { max = 44,  t = 14 }, { max = 49,  t = 15 }, { max = 999, t = 16 }}",
       },
     },
     animation: {
@@ -196,7 +209,7 @@ const aura = {
     fontSize: 14,
     justify: "CENTER",
     config: {
-      baseResetHint: "Tune aura_env.baseReset in Actions > On Init. 8 is a good default for Classic/TBC open world.",
+      baseResetHint: "Tune aura_env.LEASH_TABLE in Actions > On Init if your server differs from the baseline table.",
       notes: "ETA is prediction-based because Blizzard API does not expose leash reset timestamp.",
     },
     conditions: [

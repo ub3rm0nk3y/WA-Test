@@ -77,20 +77,33 @@ function(event, ...)
   local isElite = (cls == "elite" or cls == "rareelite")
   local isBoss = (cls == "worldboss")
 
-  local est = aura_env.baseReset or 8
-  if isElite then est = est + 3 end
-  if isBoss then est = est + 8 end
-
-  -- Coarse range buckets available in Classic/TBC API
-  if CheckInteractDistance(target, 3) then
-    est = est + 2
-  elseif CheckInteractDistance(target, 2) then
-    est = est + 1
-  else
-    est = est - 1
+  local function getLeashEstimateByLevel(level)
+    local tbl = aura_env.LEASH_TABLE or {
+      { max = 19,  t = 10 },
+      { max = 29,  t = 12 },
+      { max = 39,  t = 13 },
+      { max = 44,  t = 14 },
+      { max = 49,  t = 15 },
+      { max = 999, t = 16 },
+    }
+    for i = 1, #tbl do
+      if level <= tbl[i].max then
+        return tbl[i].t
+      end
+    end
+    return 16
   end
 
-  if est < 4 then est = 4 end
+  local mobLevel = UnitLevel(target)
+  if not mobLevel or mobLevel <= 0 then
+    mobLevel = 60
+  end
+
+  local est = getLeashEstimateByLevel(mobLevel)
+
+  -- Keep small classification adjustments, but preserve the table as the base model.
+  if isElite then est = est + 1 end
+  if isBoss then est = est + 2 end
 
   if event == "COMBAT_LOG_EVENT_UNFILTERED" then
     local _, _, _, srcGUID, _, _, _, dstGUID = CombatLogGetCurrentEventInfo()
@@ -203,10 +216,17 @@ end
 - **On Init**: enable Custom and paste:
 
 ```lua
-aura_env.baseReset = 8
+aura_env.LEASH_TABLE = {
+  { max = 19,  t = 10 },
+  { max = 29,  t = 12 },
+  { max = 39,  t = 13 },
+  { max = 44,  t = 14 },
+  { max = 49,  t = 15 },
+  { max = 999, t = 16 },
+}
 ```
 
-(You can tune to `7` or `9-10` based on your realm behavior.)
+(Tune the table values directly if your server behaves differently.)
 
 ## 6) Conditions
 
