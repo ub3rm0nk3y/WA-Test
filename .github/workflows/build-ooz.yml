@@ -1,9 +1,9 @@
 name: Temporary Ooz Build
 
 on:
-  push:
+  pull_request:
     branches:
-      - chatgpt/temporary-ooz-build
+      - main
   workflow_dispatch:
 
 jobs:
