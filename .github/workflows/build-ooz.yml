@@ -1,0 +1,37 @@
+name: Temporary Ooz Build
+
+on:
+  push:
+    branches:
+      - chatgpt/temporary-ooz-build
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+
+      - name: Checkout ooz-wasm source
+        uses: actions/checkout@v4
+        with:
+          repository: SnosMe/ooz-wasm
+          ref: ebed82851988add824e092dc4db320c8fa39aaca
+          path: ooz-wasm
+
+      - name: Build native Kraken decompressor
+        run: |
+          g++ -std=c++17 -O3 -fPIC -shared \
+            ooz-wasm/lib/bitknit.cpp \
+            ooz-wasm/lib/kraken.cpp \
+            ooz-wasm/lib/lzna.cpp \
+            -o libooz.so
+          file libooz.so
+
+      - name: Upload decoder
+        uses: actions/upload-artifact@v4
+        with:
+          name: libooz-linux-x64
+          path: libooz.so
+          if-no-files-found: error
