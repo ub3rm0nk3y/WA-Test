@@ -1,0 +1,23 @@
+name: Build temporary Oodle decoder
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone decoder source
+        run: git clone --depth 1 https://github.com/SnosMe/ooz-wasm.git ooz-wasm
+      - name: Build shared library
+        run: |
+          cd ooz-wasm
+          g++ -std=c++17 -O3 -fPIC -shared -msse2 \
+            lib/bitknit.cpp lib/kraken.cpp lib/lzna.cpp \
+            -o libooz.so
+      - name: Upload decoder
+        uses: actions/upload-artifact@v4
+        with:
+          name: libooz-linux
+          path: ooz-wasm/libooz.so
